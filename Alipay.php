@@ -4,6 +4,8 @@
 	https://github.com/bitmash/alipay-api-php
 */
 
+include_once(__DIR__ . "/Config.php");
+
 class Alipay {
 
 	private $config;
@@ -13,8 +15,7 @@ class Alipay {
 		so I'm probably missing out.
 	**/
 	public function __construct()
-	{
-		include_once(__DIR__ . "/Config.php");
+	{	
 		$this->config = new Config();
 	}
 
@@ -40,7 +41,7 @@ class Alipay {
 	{
 		$data = array(
 			'service' => 'create_direct_pay_by_user',
-			'seller_email' => $this->config->_seller_email,
+			'seller_email' => $this->config->seller_email(),
 			'payment_type' => "1",
 			'out_trade_no' => $sale_id,
 			'subject' => substr($description, 0, 256),
@@ -48,11 +49,11 @@ class Alipay {
 			'total_fee' => $amount,
 			'notify_url' => $notify_url,
 			'return_url' => $return_url,
-			'partner' => $this->config->_partner_id,
-			'_input_charset' => $this->config->_input_charset
+			'partner' => $this->config->partner_id(),
+			'_input_charset' => $this->config->charset()
 		);
 
-		return $this->config->_endpoint . "?" . $this->_prepData($data);
+		return $this->config->endpoint() . "?" . $this->_prepData($data);
 	}
 
 	/**
@@ -61,11 +62,14 @@ class Alipay {
 		transaction is valid by pinging Alipay again.
 
 		@param	data	array	the response GET parameters from Alipay
-		@return	mixed
+		@return	array
 	**/
 	public function verifyPayment($data)
 	{
-		$result = array('result' => false);
+		$result = array(
+			'result' => false,
+			'id' => ''
+		);
 		$sign = $data['sign'];
 		unset($data['sign'], $data['sign_type']);
 
@@ -76,7 +80,7 @@ class Alipay {
 
 		$request = array(
 			'service' => 'notify_verify',
-			'partner' => $this->config->_partner_id,
+			'partner' => $this->config->partner_id(),
 			'notify_id' => $data['notify_id']
 		);
 		
@@ -99,12 +103,9 @@ class Alipay {
 		{
 			if (in_array($data['trade_status'], array('TRADE_SUCCESS', 'TRADE_FINISHED')))
 			{
-				$result = array('result' => true, 'id' => $data['trade_no']);
+				$result['result'] = true;
 			}
-			else
-			{
-				$result['id'] = $data['trade_no'];
-			}
+			$result['id'] = $data['trade_no'];
 		}
 		else
 		{
@@ -127,21 +128,21 @@ class Alipay {
 
 		if ($method == "get")
 		{
-			$curl = curl_init($this->config->_endpoint . "?$data");
+			$curl = curl_init($this->config->endpoint() . "?$data");
 			curl_setopt($curl, CURLOPT_POST, false);
 		}
 		else
 		{
-			$curl = curl_init($this->config->_endpoint . "?_input_charset=" . $this->config->_input_charset);
+			$curl = curl_init($this->config->endpoint() . "?_input_charset=" . $this->config->charset());
 			curl_setopt($curl, CURLOPT_POST, true);
-			curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
 		}
 
 		curl_setopt($curl, CURLOPT_HEADER, 0);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_SSLVERSION, 3);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-		curl_setopt($curl, CURLOPT_CAINFO, $this->config->_ssl_cert);
+		curl_setopt($curl, CURLOPT_CAINFO, $this->config->ssl_cert());
 		$response = curl_exec($curl);
 
 		if (curl_error($curl))
@@ -187,7 +188,7 @@ class Alipay {
 			$query .= "$k=$v&";
 		}
 
-		return md5(substr($query, 0, -1) . $this->config->_api_secret);
+		return md5(substr($query, 0, -1) . $this->config->secret());
 	}
 
 	/**

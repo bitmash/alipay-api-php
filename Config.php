@@ -48,6 +48,36 @@ class Config {
     {
         return $this;
     }
+
+    public function endpoint()
+    {
+        return $this->_endpoint;
+    }
+
+    public function partner_id()
+    {
+        return $this->_partner_id;
+    }
+
+    public function secret()
+    {
+        return $this->_api_secret;
+    }
+
+    public function seller_email()
+    {
+        return $this->_seller_email;
+    }
+
+    public function ssl_cert()
+    {
+        return $this->_ssl_cert;
+    }
+
+    public function charset()
+    {
+        return $this->_input_charset;
+    }
 }
 
 ?>
