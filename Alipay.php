@@ -20,15 +20,16 @@ class Alipay {
 	}
 
 	/**
-		We create a transaction URL for Alipay. The user is sent back to the 
-		specified return_url after completing the transaction on Alipay's site.
-		There are two types of response handlers, and it's recommended to use both
-		in case there is a hold on processing the payment:
+		We create a transaction URL for Alipay. There are two types of response 
+		handlers, and you only need to use one:
 
-		return_url - Alipay sends the buyer back to this URL synchronously, along with a GET response.
-		notify_url - a POST response is sent asynchronously once the payment is verified.
+		return_url
+		Alipay sends the buyer back to this URL synchronously, along with a GET response.
 
-		The response needs to be verified regardless of the handler.
+		notify_url
+		A POST response is sent asynchronously once the payment is verified. A 
+		'notify_id' will be in the response that needs to be verfied by calling 
+		verifyPayment. The 'notify_id' expires in 1 minute.
 
 		@param	sale_id		string(64)	your internal transaction ID for reference
 		@param	amount		float		the amount charged to the user (RMB)
@@ -47,7 +48,7 @@ class Alipay {
 			'subject' => substr($description, 0, 256),
 			//'body' => '',
 			'total_fee' => $amount,
-			'notify_url' => $notify_url,
+			//'notify_url' => $notify_url,
 			'return_url' => $return_url,
 			'partner' => $this->config->partner_id(),
 			'_input_charset' => $this->config->charset()
@@ -58,18 +59,29 @@ class Alipay {
 
 	/**
 		Compares the signed response data from Alipay with our own key
-		using the GET parameters. Then verifies the Notify ID from the 
-		transaction is valid by pinging Alipay again.
+		using the response parameters. If the type is 'notify' then we verify
+		the transaction by using the 'notify_id' and pinging Alipay again.
+
+		Possible Trade Status:
+			WAIT_BUYER_PAY - wait for buyer to pay
+			TRADE_CLOSED - transaction timed out
+			TRADE_SUCCESS - payment was successful, refunds allowed
+			TRADE_PENDING - waiting for buyer to pay
+			TRADE_FINISHED - payment was successful, no refunds allowed
 
 		@param	data	array	the response GET parameters from Alipay
+		@param	type	string	options are 'return' and 'notify'
 		@return	array
 	**/
-	public function verifyPayment($data)
+	public function verifyPayment($data = array(), $type = "return")
 	{
+		$success = array('TRADE_SUCCESS', 'TRADE_FINISHED');
+
 		$result = array(
 			'result' => false,
-			'id' => ''
+			'id' => $data['trade_no']
 		);
+
 		$sign = $data['sign'];
 		unset($data['sign'], $data['sign_type']);
 
@@ -78,38 +90,33 @@ class Alipay {
 			return $result;
 		}
 
-		$request = array(
-			'service' => 'notify_verify',
-			'partner' => $this->config->partner_id(),
-			'notify_id' => $data['notify_id']
-		);
-		
-		$response = $this->_send("get", http_build_query($request));
-		
-		/*
-			Possible Trade Status:
-			WAIT_BUYER_PAY - wait for buyer to pay (notify_url)
-			TRADE_CLOSED - transaction timed out (notify_url)
-			TRADE_SUCCESS - payment was successful, refunds allowed (return_url)
-			TRADE_PENDING - wait for buyer to pay (notify_url)
-			TRADE_FINISHED - payment was successful, no refunds allowed (return_url)
-
-			If the result is true, return the trade_no and add funds to balance
-			If the result is false, but the response is valid, wait for Alipay
-			to ping our notify_url before adding funds to balance.
-			Otherwise, don't add funds at all.
-		*/
-		if (preg_match("/true$/i", $response))
+		// return_url process
+		if ($type == "return" && in_array($data['trade_status'], $success))
 		{
-			if (in_array($data['trade_status'], array('TRADE_SUCCESS', 'TRADE_FINISHED')))
-			{
-				$result['result'] = true;
-			}
-			$result['id'] = $data['trade_no'];
+			$result['result'] = true;
 		}
-		else
+		// notify_url process
+		else if ($type == "notify")
 		{
-			$this->_error($response);
+			$request = array(
+				'service' => 'notify_verify',
+				'partner' => $this->config->partner_id(),
+				'notify_id' => $data['notify_id']
+			);
+			
+			$response = $this->_send("get", http_build_query($request));
+
+			if (preg_match("/true$/i", $response))
+			{
+				if (in_array($data['trade_status'], $success))
+				{
+					$result['result'] = true;
+				}
+			}
+			else
+			{
+				$this->_error($response);
+			}
 		}
 
 		return $result;
