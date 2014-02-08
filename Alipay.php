@@ -21,7 +21,8 @@ class Alipay {
 
 	/**
 		We create a transaction URL for Alipay. There are two types of response 
-		handlers, and you only need to use one:
+		handlers. In some cases a transaction is delayed from being completed
+		while it's being verified by Alipay; these ping notify_url later.
 
 		return_url
 		Alipay sends the buyer back to this URL synchronously, along with a GET response.
@@ -48,7 +49,7 @@ class Alipay {
 			'subject' => substr($description, 0, 256),
 			//'body' => '',
 			'total_fee' => $amount,
-			//'notify_url' => $notify_url,
+			'notify_url' => $notify_url,
 			'return_url' => $return_url,
 			'partner' => $this->config->partner_id(),
 			'_input_charset' => $this->config->charset()
@@ -59,8 +60,8 @@ class Alipay {
 
 	/**
 		Compares the signed response data from Alipay with our own key
-		using the response parameters. If the type is 'notify' then we verify
-		the transaction by using the 'notify_id' and pinging Alipay again.
+		using the response parameters. We also verify the transaction by using 
+		the 'notify_id' and pinging Alipay again.
 
 		Possible Trade Status:
 			WAIT_BUYER_PAY - wait for buyer to pay
@@ -70,10 +71,9 @@ class Alipay {
 			TRADE_FINISHED - payment was successful, no refunds allowed
 
 		@param	data	array	the response GET parameters from Alipay
-		@param	type	string	options are 'return' and 'notify'
 		@return	array
 	**/
-	public function verifyPayment($data = array(), $type = "return")
+	public function verifyPayment($data = array())
 	{
 		$success = array('TRADE_SUCCESS', 'TRADE_FINISHED');
 
@@ -87,36 +87,27 @@ class Alipay {
 
 		if ($sign != $this->_sign($data))
 		{
+			$this->_error("Signs do not mach: $sign - $new_sign");
 			return $result;
 		}
+		$request = array(
+			'service' => 'notify_verify',
+			'partner' => $this->config->partner_id(),
+			'notify_id' => $data['notify_id']
+		);
+		
+		$response = $this->_send("get", http_build_query($request));
 
-		// return_url process
-		if ($type == "return" && in_array($data['trade_status'], $success))
+		if (preg_match("/true$/i", $response))
 		{
-			$result['result'] = true;
+			if (in_array($data['trade_status'], $success))
+			{
+				$result['result'] = true;
+			}
 		}
-		// notify_url process
-		else if ($type == "notify")
+		else
 		{
-			$request = array(
-				'service' => 'notify_verify',
-				'partner' => $this->config->partner_id(),
-				'notify_id' => $data['notify_id']
-			);
-			
-			$response = $this->_send("get", http_build_query($request));
-
-			if (preg_match("/true$/i", $response))
-			{
-				if (in_array($data['trade_status'], $success))
-				{
-					$result['result'] = true;
-				}
-			}
-			else
-			{
-				$this->_error($response);
-			}
+			$this->_error($response);
 		}
 
 		return $result;

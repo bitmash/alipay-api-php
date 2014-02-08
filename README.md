@@ -22,7 +22,7 @@ The comments in these classes will guide you when building your layer on top of 
 
 ## Usage
 
-All of this information is to the best of my knowledge, so there may be some inaccurate details here. I will continue to update it as I get a better idea of the workflow.
+All of this information is to the best of my knowledge, so there may be some inaccurate details here. I will continue to update it as I get a better idea of the workflow. In both cases you will need to automatically verify that the transaction is authentic by comparing their `sign` with yours that you compute from the response data. You also need to verify that the `notify_id` Alipay sends back to your URL is valid by send a `GET` request to `https://mapi.alipay.com/gateway.do?service=notify_verify...`. The `notify_id` is set to expire within a minute or so. If the transaction is authentic, you will receive a response of `true`; otherwise, it will be `false`.
 
 ### return_url
 
@@ -30,7 +30,7 @@ The response will be in your `GET` data when Alipay sends the user back to your 
 
 ### notify_url
 
-The response will be in your `POST` data when Alipay notifies your specified `notify_url`. In this particular case, you will need to verify that the transaction and notification are legitimate and have not been used before to prevent duplication. Alipay returns a `notify_id` to help you accomplish this.
+The response will be in your `POST` data when Alipay notifies your specified `notify_url`. Be sure to disable any CSRF security and remove the login requirement you might have in place for the `notify_url`.
 
 ### Response Types
 
