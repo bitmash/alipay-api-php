@@ -84,8 +84,9 @@ class Alipay {
 
 		$sign = $data['sign'];
 		unset($data['sign'], $data['sign_type']);
+		$new_sign = $this->_sign($data);
 
-		if ($sign != $this->_sign($data))
+		if ($sign != $new_sign)
 		{
 			$this->_error("Signs do not mach: $sign - $new_sign");
 			return $result;
