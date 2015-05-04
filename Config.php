@@ -4,15 +4,20 @@
     https://github.com/bitmash/alipay-api-php
     
     Configuration settings for Alipay API
-
     Define each variable below according to your API settings.
+    Development / test account is provided according to the docs.
 */
 
 class Config {
 
     /*
+        Toggle between testing and production environments
+        Valid values are: development, production
+    */
+    private $_environment = "development";
+
+    /*
         The HTTPS API URL is https://mapi.alipay.com/gateway.do
-        There are no Sandbox URLs that I'm aware of.
     */
     private $_endpoint = "https://mapi.alipay.com/gateway.do";
 
@@ -29,18 +34,20 @@ class Config {
     private $_api_secret = "";
 
     /*
-        This is your Alipay account's e-mail address.
+        Currency to trade in. Default is RMB.
+        Valid values are: GBP, HKD, USD, CHF, SGD, SEK, DKK, NOK, JPY, CAD, AUD
+        EUR, NZD, RUB, MOP
     */
-    private $_seller_email = "";
+    private $_currency = "";
 
     /*
         You need to reference this certificate when using cURL.
-        It's part of the Alipay demo zip under the PHP examples.
     */
-    private $_ssl_cert = "/path/to/alipay_ssl_cert.pem";
+    private $_ssl_cert = "alipay_cert.pem";
 
     /*
         Options: utf-8, gbk, gb2312
+        This library only supports utf-8
     */
     private $_input_charset = "utf-8";
 
@@ -51,22 +58,34 @@ class Config {
 
     public function endpoint()
     {
+        if ($this->_environment == "development")
+        {
+            return "https://mapi.alipay.net/gateway.do";
+        }
         return $this->_endpoint;
     }
 
     public function partner_id()
     {
+        if ($this->_environment == "development")
+        {
+            return "2088101122136241";
+        }
         return $this->_partner_id;
     }
 
     public function secret()
     {
+        if ($this->_environment == "development")
+        {
+            return "760bdzec6y9goq7ctyx96ezkz78287de";
+        }
         return $this->_api_secret;
     }
 
-    public function seller_email()
+    public function currency()
     {
-        return $this->_seller_email;
+        return $this->_currency;
     }
 
     public function ssl_cert()
