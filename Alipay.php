@@ -6,6 +6,9 @@
 
 include_once(__DIR__ . "/Config.php");
 
+
+class AlipayException extends Exception {}
+
 class Alipay {
 
 	private $config;
@@ -196,9 +199,8 @@ class Alipay {
 		@param	msg	string	the message to output/write
 		@return	null
 	**/
-	private function _error($msg)
+	private function _error($msg = "")
 	{
-		$msg = is_string($msg) ? $msg : serialize($msg);
-		echo "ALIPAY: " . $msg;
+		throw new AlipayException($msg);
 	}
 }
