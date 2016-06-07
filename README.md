@@ -15,21 +15,13 @@ Alipay provides a test environment with a dummy account and test links, assuming
 
 A test account is provided by Alipay.
 
-* Endpoint: http(s)://mapi.alipay.net/gateway.do.
+* Endpoint: https://openapi.alipaydev.com/gateway.do
 * Partner ID: 2088101122136241
 * Partner Secret: 760bdzec6y9goq7ctyx96ezkz78287de
 * Username: alipaytest20091@gmail.com
-* Password: alipay
-* Payment password: alipay
+* Password: 111111
+* Payment password: 111111
 * CAPTCHA: 8888
-
-### Test Link
-
-#### HTTP
-http://mapi.alipay.net/gateway.do?body=test&subject=test&sign_type=MD5&out_trade_no=4403648718928911&currency=USD&total_fee=0.1&partner=2088101122136241&notify_url=http%3A%2F%2Fapi.test.alipay.net%2Fatinterface%2Freceive_notify.htm&sendFormat=normal&return_url=https%3A%2F%2Fdevmobile.inicis.com%2Fsmart%2Ftestmall%2Freturn_url_test.php%3FOID%3D20131008414885731&sign=22a0b5d9fcfa4c4b2633c787aefcb2cc&_input_charset=UTF-8&service=create_forex_trade
-
-#### HTTPS
-https://mapi.alipay.net/gateway.do?body=test&subject=test&sign_type=MD5&out_trade_no=4403648718928911&currency=USD&total_fee=0.1&partner=2088101122136241&notify_url=http%3A%2F%2Fapi.test.alipay.net%2Fatinterface%2Freceive_notify.htm&sendFormat=normal&return_url=https%3A%2F%2Fdevmobile.inicis.com%2Fsmart%2Ftestmall%2Freturn_url_test.php%3FOID%3D20131008414885731&sign=22a0b5d9fcfa4c4b2633c787aefcb2cc&_input_charset=UTF-8&service=create_forex_trade
 
 ## Usage
 
