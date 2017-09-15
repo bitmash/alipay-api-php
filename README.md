@@ -3,13 +3,13 @@ Alipay API PHP Library
 
 ## About
 
-This is a concise library written in PHP for the Alipay API merchant account for overseas merchants. It's very basic and only offers support for creating direct pay by user transactions: also known as "Cross-border Website Payment". Alipay provides documentation and code examples at https://globalprod.alipay.com/order/integrationGuide.htm.
+This is a concise library written in PHP for the Alipay API merchant account for overseas merchants. It's basic and only offers support for creating direct pay by user transactions - also known as "Cross-border Website Payment". Alipay provides documentation and code examples at https://globalprod.alipay.com/order/integrationGuide.htm.
 
 This library does not support Transaction Queries, Refunds and Reconciliation. I may add these another time unless someone else wants to take a crack at it.
 
 ## Development
 
-Alipay provides a test environment with a dummy account and test links, assuming it's working.
+Alipay provides a test environment with a dummy account and test links assuming it's working.
 
 ### Account
 
@@ -25,15 +25,15 @@ A test account is provided by Alipay.
 
 ## Usage
 
-All of this information is to the best of my knowledge, so there may be some inaccurate details here. I will continue to update it as I get a better idea of the workflow. In both cases you will need to automatically verify that the transaction is authentic by comparing their `sign` with yours that you compute from the response data. You also need to verify that the `notify_id` Alipay sends back to your URL is valid by send a `GET` request to `https://mapi.alipay.com/gateway.do?service=notify_verify...`. The `notify_id` is set to expire within a minute. If the transaction is authentic, you will receive a response of `true`; otherwise, it will be `false`.
+All of this information is to the best of my knowledge, so there may be some inaccurate details here. You will need to automatically verify that the transaction is authentic by comparing their `sign` with yours that you compute from the response. You also need to verify that the `notify_id` Alipay sends to your `return_url` is valid by sending a `GET` request to `https://mapi.alipay.com/gateway.do?service=notify_verify...`. The `notify_id` is set to expire within a minute. If the transaction is authentic, you will receive a response of `true`; otherwise, it will be `false`.
 
 ### return_url
 
-The response will be in your `GET` data when Alipay sends the user back to your specified `return_url`. Check the `trade_status` once they return to see if it's already completed (TRADE_FINISHED).
+The response will be in the `GET` data when Alipay sends the user back to your specified `return_url`. Check the `trade_status` once they return to see if it's already completed (TRADE_FINISHED).
 
 ### notify_url
 
-The response will be in your `POST` data when Alipay notifies your specified `notify_url`. Be sure to disable any CSRF security and remove the login requirement you might have in place for the `notify_url`.
+In some cases the payment verification takes longer on Alipay's end so they will ping your specified `notify_url`. The response will be in the `POST` data. Be sure to disable any CSRF security and remove the login requirement you might have in place for the `notify_url`.
 
 ### Transaction Response Types
 

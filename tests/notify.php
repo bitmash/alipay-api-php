@@ -7,7 +7,7 @@ $tno = $_POST['trade_no'];
 $total_amount = $_POST['total_fee']; // don't forget to substract Alipay Transaction fee
 $alipay = new Alipay();
 
-// Verify system transaction ID hasn't been used by looking it up in your DB.
+// @todo: Verify system transaction ID hasn't been used by looking it up in your DB.
 
 try {
     if ($alipay->verifyPayment($_POST) === false) // Transaction isn't complete
@@ -23,4 +23,4 @@ try {
     return false;
 }
 
-// Update the transaction in your DB and add funds for user
+// @todo: Update the transaction in your DB and add funds for the user
